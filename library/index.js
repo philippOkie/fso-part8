@@ -104,8 +104,8 @@ const typeDefs = `
     dummy: Int
     authorCounter: Int
     bookCounter: Int
-    allBooks: [Book!]!
     allAuthors: [Author!]!
+    allBooks(author: String, genre: String): [Book!]
     findAuthor(name: String!): Author 
   }
   
@@ -129,6 +129,20 @@ const typeDefs = `
     id: ID!
     genres: [String!]!
   }
+
+  type Mutation {
+    addBook(
+      title: String!
+      published: String!
+      author: String!
+      genres: [String!]!
+    ): Book
+
+    editAuthor(
+      name: String!
+      setBornTo: String!
+    ): Author
+  }
 `;
 
 const resolvers = {
@@ -140,6 +154,9 @@ const resolvers = {
     allBooks: (root, args) => {
       if (args.author) {
         return books.filter((book) => book.author === args.author);
+      }
+      if (args.genre) {
+        return books.filter((book) => book.genres.includes(args.genre));
       }
       return books;
     },
@@ -161,6 +178,31 @@ const resolvers = {
         name,
         born,
       };
+    },
+  },
+  Mutation: {
+    addBook: (root, args) => {
+      if (books.find((b) => b.title === args.title)) {
+        throw new GraphQLError("Title must be unique", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.title,
+          },
+        });
+      }
+      const book = { ...args, id: uuid() };
+      books = books.concat(book);
+      return book;
+    },
+    editAuthor: (root, args) => {
+      const author = authors.find((a) => a.name === args.name);
+      if (!author) {
+        return null;
+      }
+
+      const updatedAuthor = { ...author, born: args.setBornTo };
+      authors = authors.map((a) => (a.name === args.name ? updatedAuthor : a));
+      return updatedAuthor;
     },
   },
 };
