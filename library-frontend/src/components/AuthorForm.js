@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation } from "@apollo/client";
 
-import { EDIT_AUTHOR } from "../queries";
+import { EDIT_AUTHOR, ALL_AUTHORS } from "../queries";
 
 const SetBirthday = () => {
   const [name, setName] = useState("");
   const [born, setBorn] = useState("");
 
-  const [changeAuthor, result] = useMutation(EDIT_AUTHOR);
+  const [changeAuthor] = useMutation(EDIT_AUTHOR, {
+    refetchQueries: [{ query: ALL_AUTHORS }],
+  });
 
   const submit = async (event) => {
     event.preventDefault();
@@ -27,6 +29,7 @@ const SetBirthday = () => {
         <div>
           name
           <input
+            type="text"
             value={name}
             onChange={({ target }) => setName(target.value)}
           />
@@ -34,6 +37,7 @@ const SetBirthday = () => {
         <div>
           born
           <input
+            type="text"
             value={born}
             onChange={({ target }) => setBorn(target.value)}
           />
