@@ -4,7 +4,7 @@ const Books = (props) => {
   }
 
   const books = props.books;
-
+  console.log(books);
   return (
     <div>
       <h2>books</h2>

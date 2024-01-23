@@ -1,6 +1,5 @@
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
-const { v1: uuid } = require("uuid");
 const { GraphQLError } = require("graphql");
 const jwt = require("jsonwebtoken");
 
@@ -116,6 +115,7 @@ const typeDefs = `
   type User {
     username: String!
     favoriteGenre: String!
+    password: String!
     id: ID!
   }
   
@@ -160,6 +160,7 @@ const typeDefs = `
     createUser(
     username: String!
     favoriteGenre: String!
+    password: String!
     ): User
 
     login(
@@ -178,14 +179,26 @@ const resolvers = {
     allAuthors: () => authors,
     allBooks: async (root, args) => {
       let query = {};
+
       if (args.author) {
-        query = { author: args.author };
+        query.author = args.author;
       }
+
       if (args.genre) {
         query.genres = { $in: [args.genre] };
       }
-      return await Book.find(query).populate("author");
+
+      // Use try-catch to handle potential errors in the database query
+      try {
+        const result = await Book.find(query).populate("author");
+        return result;
+      } catch (error) {
+        // Handle the error appropriately (e.g., log it or return an error message)
+        console.error("Error fetching books:", error);
+        throw new Error("Unable to fetch books");
+      }
     },
+
     findAuthor: (root, args) => {
       return authors.find((a) => a.name === args.name);
     },
@@ -257,8 +270,21 @@ const resolvers = {
       return updatedAuthor;
     },
     createUser: async (root, args) => {
-      const user = new User(args);
+      if (!args.password) {
+        throw new GraphQLError("Password is required", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+          },
+        });
+      }
 
+      const favoriteGenre = args.favoriteGenre || "defaultGenre";
+
+      const user = new User({
+        username: args.username,
+        favoriteGenre: favoriteGenre,
+        password: args.password,
+      });
       try {
         await user.save();
         return user;
