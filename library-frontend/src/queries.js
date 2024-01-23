@@ -64,3 +64,13 @@ export const LOGIN = gql`
     }
   }
 `;
+
+export const BOOKS_BY_GENRE = gql`
+  query BooksByGenre($genre: String!) {
+    booksByGenre(genre: $genre) {
+      title
+      author
+      genres
+    }
+  }
+`;

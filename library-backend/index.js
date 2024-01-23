@@ -109,6 +109,7 @@ const typeDefs = `
     allAuthors: [Author!]!
     allBooks(author: String, genre: String): [Book!]
     findAuthor(name: String!): Author 
+    booksByGenre(genre: String!): [Book!]!
     me: User
   }
 
@@ -201,6 +202,9 @@ const resolvers = {
 
     findAuthor: (root, args) => {
       return authors.find((a) => a.name === args.name);
+    },
+    booksByGenre: (root, args) => {
+      return books.filter((book) => book.genres.includes(args.genre));
     },
     me: (root, args, context) => {
       return context.currentUser;
